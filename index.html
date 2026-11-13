@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BON31 会議室（プレビュー）</title>
+<style>
+  :root{
+    --green:#2f5d3a; --green-d:#1f3f27; --green-l:#e7efe8;
+    --gold:#b8933a; --gold-l:#f6efdc;
+    --bg:#f7f6f2; --card:#fff; --text:#222; --sub:#6b6b6b; --line:#e3e1da;
+    --yama:#2b6cb0; --ohara:#c05621; --oai:#10a37f; --claude:#c15f3c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:15px;line-height:1.6}
+  button{font:inherit;cursor:pointer}
+  header{position:sticky;top:0;z-index:10;background:var(--green);color:#fff;
+    padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px}
+  header .logo{width:30px;height:30px;border-radius:50%;background:var(--gold);display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--green-d)}
+  header h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header .back{background:none;border:none;color:#fff;font-size:22px;padding:0 6px 0 0}
+  .who{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:16px;padding:3px 10px;font-size:13px}
+  .banner{background:var(--gold-l);color:#6b5520;font-size:12px;padding:6px 16px;border-bottom:1px solid #eadfbf}
+  main{padding:14px 14px calc(90px + env(safe-area-inset-bottom))}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;
+    padding-bottom:env(safe-area-inset-bottom);z-index:10}
+  nav button{flex:1;background:none;border:none;padding:8px 0 10px;font-size:11px;color:var(--sub)}
+  nav button .ic{display:block;font-size:20px;line-height:1.3}
+  nav button.on{color:var(--green);font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+  .muted{color:var(--sub);font-size:13px}
+  .btn{background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:600}
+  .btn.gold{background:var(--gold);color:#fff}
+  .btn.ghost{background:#fff;color:var(--green);border:1px solid var(--green)}
+  .btn.red{background:#b83232}
+  .btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
+  .row{display:flex;gap:8px;align-items:center}
+  .grow{flex:1}
+  input[type=text],textarea,select{width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
+  textarea{resize:vertical}
+  h2{font-size:16px;margin:4px 0 10px}
+  .mtg{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+  .mtg b{display:block}
+  /* chat */
+  .msg{display:flex;gap:8px;margin:12px 0}
+  .av{width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+  .bubble{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;flex:1;min-width:0}
+  .bubble .name{font-size:12px;font-weight:700}
+  .bubble .name small{font-weight:400;color:var(--sub);margin-left:6px}
+  .bubble .txt{white-space:pre-wrap;word-break:break-word}
+  .bubble .acts{margin-top:4px;text-align:right}
+  .bubble .acts button{background:none;border:none;color:var(--sub);font-size:12px;padding:2px 4px}
+  .msg.ai .bubble{background:#fbfbf9}
+  .summary{border:2px solid var(--gold);background:var(--gold-l)}
+  .prop{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px}
+  .prop .st{font-size:12px;font-weight:700}
+  .typing{color:var(--sub);font-size:13px;margin:8px 0 8px 42px}
+  .composer{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);padding:8px 10px;z-index:9}
+  .composer textarea{min-height:42px;max-height:120px;padding:8px 10px}
+  .chip{display:inline-block;font-size:11px;border-radius:10px;padding:1px 8px;background:var(--green-l);color:var(--green);font-weight:600}
+  .chip.gold{background:var(--gold-l);color:#7a5f1f}
+  .chip.gray{background:#eee;color:#777}
+  .hist{border-left:3px solid var(--line);margin:8px 0 0 4px;padding-left:10px;font-size:13px}
+  .hist div{margin-bottom:6px}
+  .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .tabs button{border:1px solid var(--line);background:#fff;border-radius:16px;padding:4px 12px;font-size:13px}
+  .tabs button.on{background:var(--green);color:#fff;border-color:var(--green)}
+  pre.code{background:#1e1e1e;color:#eee;border-radius:8px;padding:10px;overflow:auto;font-size:12px;white-space:pre-wrap}
+  .sheet{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;display:flex;align-items:flex-end}
+  .sheet .in{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:85vh;overflow:auto}
+  .sheet .opt{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:8px}
+  label.f{display:block;font-size:13px;font-weight:700;margin:12px 0 4px}
+</style>
+</head>
+<body>
+<header id="hd"></header>
+<div class="banner">プレビュー版です。AIの返事は見本のダミーで、データはこの端末の中だけに保存されます。</div>
+<main id="main"></main>
+<div id="composer"></div>
+<nav id="nav"></nav>
+<div id="sheet"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- 参加者 ---------- */
+const P = {
+  yama:   {name:"山川",   label:"山", color:"var(--yama)",   ai:false},
+  ohara:  {name:"大原",   label:"大", color:"var(--ohara)",  ai:false},
+  oai:    {name:"大原AI", label:"AI", color:"var(--oai)",    ai:true, sub:"ChatGPT"},
+  claude: {name:"Claude", label:"C",  color:"var(--claude)", ai:true, sub:"Claude"}
+};
+
+/* ---------- 保存 ---------- */
+const KEY = "bon31-meeting-preview-v1";
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+function now(){ return Date.now(); }
+function seed(){
+  const t = now();
+  const mId = uid();
+  return {
+    me: "yama",
+    meetings: [{
+      id: mId, title: "（サンプル）会議アプリの進め方", createdAt: t,
+      messages: [
+        {id:uid(), who:"yama", ts:t, text:"会議アプリ、まずはプレビュー版で画面を確認してから本番に進めたい。"},
+        {id:uid(), who:"oai", ts:t, text:"賛成です。まず2人が毎日開きたくなる画面かどうかを確かめましょう。営業の打ち合わせでも使えるよう、スマホでの見やすさを優先したいです。"},
+        {id:uid(), who:"claude", ts:t, text:"異論はないですが、1点だけ。本番ではAPI代がかかるので、議論の往復回数に上限をつけておくべきです。最初は3往復を推します。"}
+      ]
+    }],
+    decisions: [{
+      id: uid(), text: "（サンプル）会議アプリはFirebaseで作る", meetingId: mId, meetingTitle:"（サンプル）会議アプリの進め方",
+      createdAt: t, by: "yama", status: "有効",
+      history: [{ts:t, by:"yama", action:"採用", from:"", to:"（サンプル）会議アプリはFirebaseで作る"}]
+    }],
+    vault: [{
+      id: uid(), tag: "コード", ts: t, by: "claude", meetingTitle: "（サンプル）会議アプリの進め方",
+      text: "// 例：AIの往復回数の上限\nconst MAX_ROUNDS = 3;"
+    }],
+    settings: {
+      rounds: 3,
+      roleOai: "攻め役。営業・アイデア・お客さん目線で、前向きな案を出す。",
+      roleClaude: "突っ込み役。リスク・実装・お金・スケジュールの観点で、必ず反論か懸念を1つ出す。",
+      handoffOai: "", handoffClaude: ""
+    }
+  };
+}
+let S;
+function load(){
+  try { const raw = localStorage.getItem(KEY); S = raw ? JSON.parse(raw) : seed(); }
+  catch(e){ S = seed(); }
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+load();
+
+/* ---------- 画面状態 ---------- */
+let view = {tab:"meet", meetingId:null, vaultTag:"すべて", openHist:{}};
+let running = null; // {meetingId, stop:false}
+
+/* ---------- ユーティリティ ---------- */
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function fmt(ts){ const d=new Date(ts); return (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function $(id){ return document.getElementById(id); }
+function meeting(id){ return S.meetings.find(m => m.id === id); }
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+function short(s, n){ s = s.replace(/\s+/g," ").trim(); return s.length > n ? s.slice(0,n) + "…" : s; }
+
+/* ---------- ダミーAI ---------- */
+const OAI_LINES = [
+  t => `「${t}」について、まずはお客さん側から考えましょう。枚方・交野・寝屋川の事業所なら、紹介や口コミが一番強いと思います。小さく始めて、反応が良いところに集中するのがいいです。`,
+  t => `いい指摘です。そこは押さえつつ、スピードも大事にしたいです。「${t}」は、2週間だけ試して数字で判断する、という形にすれば動きやすいと思います。`,
+  t => `なるほど。それなら費用をかけずにできる方法から始めましょう。手持ちのチラシとSNSで反応を見て、手応えがあれば次の手を打つ、という順番でどうでしょう。`,
+  t => `お客さん目線で言うと、「わかりやすさ」が一番です。説明が1分で終わる形に絞れば、成約率は上がると思います。`
+];
+const CLAUDE_LINES = [
+  t => `方向性には賛成です。ただ懸念が1つあります。「${t}」は、誰がいつまでに何をやるかが決まっていないと止まりがちです。担当と期限を先に決めましょう。`,
+  t => `反論を1つ。2週間で判断するなら、何を見て判断するかを先に決めておかないと、結局ずるずる続きます。「問い合わせ件数○件以上なら続行」のような基準が必要です。`,
+  t => `費用をかけない案はいいと思います。ただ、時間のコストも見ておくべきです。2人とも本業があるので、週に使える時間を先に決めておかないと無理が出ます。`,
+  t => `リスク面で言うと、最初の数件で失敗すると口コミが逆に効いてしまいます。最初はよく知っているお客さんから始めて、やり方を固めてから広げるのが安全です。`
+];
+function pickLine(arr, i, topic){ return arr[i % arr.length](short(topic, 18)); }
+
+function makeSummary(topic){
+  const t = short(topic, 22);
+  return {
+    text: `【まとめ】「${t}」\n論点：\n・スピードを優先するか、慎重に進めるか\n・判断の基準と担当・期限が決まっていない\n・2人の使える時間に限りがある`,
+    proposals: [
+      {id:uid(), text:`「${t}」は2週間のお試しで進め、問い合わせ件数で続けるか判断する`, status:"未決"},
+      {id:uid(), text:"担当と期限を決める（例：山川＝準備、大原＝連絡、期限は来週金曜）", status:"未決"},
+      {id:uid(), text:"最初は知り合いのお客さんから始めて、やり方を固める", status:"未決"}
+    ]
+  };
+}
+
+function humanSince(m, idx){
+  // 直前の議論開始以降に人間が書き込んだ内容
+  return m.messages.slice(idx).filter(x => P[x.who] && !P[x.who].ai && x.kind !== "summary").pop();
+}
+
+async function runDebate(mId){
+  const m = meeting(mId);
+  if (!m || running) return;
+  const topic = m.title;
+  const startIdx = m.messages.length;
+  running = {meetingId:mId, stop:false};
+  const rounds = Math.max(1, Math.min(5, S.settings.rounds|0));
+  let seen = null;
+  bgRender();
+  for (let r = 0; r < rounds; r++){
+    for (const who of ["oai","claude"]){
+      if (running.stop) break;
+      running.typing = who; bgRender();
+      await sleep(1100 + Math.random()*700);
+      if (running.stop) break;
+      let text = pickLine(who === "oai" ? OAI_LINES : CLAUDE_LINES, r, topic);
+      const h = humanSince(m, startIdx);
+      if (h && h !== seen){
+        text = `（${P[h.who].name}さんの「${short(h.text, 16)}」を踏まえて）\n` + text;
+        seen = h;
+      }
+      m.messages.push({id:uid(), who, ts:now(), text});
+      save(); bgRender();
+    }
+    if (running.stop) break;
+  }
+  if (!running.stop){
+    running.typing = "claude"; bgRender();
+    await sleep(1200);
+    const sm = makeSummary(topic);
+    m.messages.push({id:uid(), who:"claude", ts:now(), kind:"summary", text:sm.text, proposals:sm.proposals});
+  } else {
+    m.messages.push({id:uid(), who:"system", ts:now(), text:"議論を途中で止めました。"});
+  }
+  running = null;
+  save(); bgRender();
+}
+
+/* ---------- 決定事項 ---------- */
+function adopt(mId, msgId, propId, text){
+  const m = meeting(mId); if (!m) return;
+  const msg = m.messages.find(x => x.id === msgId); if (!msg) return;
+  const p = msg.proposals.find(x => x.id === propId); if (!p) return;
+  const finalText = (text || p.text).trim(); if (!finalText) return;
+  p.status = text && text.trim() !== p.text ? "修正して採用" : "採用";
+  p.text = finalText;
+  S.decisions.unshift({
+    id:uid(), text:finalText, meetingId:mId, meetingTitle:m.title, createdAt:now(), by:S.me, status:"有効",
+    history:[{ts:now(), by:S.me, action:p.status, from:"", to:finalText}]
+  });
+  save(); render();
+}
+function reject(mId, msgId, propId){
+  const m = meeting(mId); const msg = m && m.messages.find(x => x.id === msgId);
+  const p = msg && msg.proposals.find(x => x.id === propId); if (!p) return;
+  p.status = "却下"; save(); render();
+}
+function editDecision(id, newText){
+  const d = S.decisions.find(x => x.id === id); if (!d) return;
+  newText = newText.trim(); if (!newText || newText === d.text) return;
+  d.history.push({ts:now(), by:S.me, action:"変更", from:d.text, to:newText});
+  d.text = newText; save(); render();
+}
+function toggleDecision(id){
+  const d = S.decisions.find(x => x.id === id); if (!d) return;
+  const next = d.status === "有効" ? "取消" : "有効";
+  d.history.push({ts:now(), by:S.me, action: next === "取消" ? "取消" : "復活", from:d.text, to:d.text});
+  d.status = next; save(); render();
+}
+
+/* ---------- シート（下から出るメニュー） ---------- */
+function openSheet(html){ $("sheet").innerHTML = `<div class="sheet" data-act="closeSheet"><div class="in">${html}</div></div>`; }
+function closeSheet(){ $("sheet").innerHTML = ""; }
+
+/* ---------- 描画 ---------- */
+function bgRender(){ if (view.tab === "meet") render(); else renderNav(); }
+function render(){
+  renderHeader(); renderNav();
+  const main = $("main"), comp = $("composer");
+  const oldInp = $("inp"); const draft = oldInp ? oldInp.value : ""; const hadFocus = oldInp && document.activeElement === oldInp;
+  comp.innerHTML = "";
+  if (view.tab === "meet"){
+    if (view.meetingId && meeting(view.meetingId)) {
+      main.innerHTML = renderThread(); comp.innerHTML = renderComposer(); main.style.paddingBottom = "190px";
+      const ni = $("inp"); if (ni){ ni.value = draft; if (hadFocus) ni.focus(); }
+      scrollBottom();
+    }
+    else { view.meetingId = null; main.innerHTML = renderMeetings(); main.style.paddingBottom = ""; }
+  } else {
+    main.style.paddingBottom = "";
+    if (view.tab === "dec") main.innerHTML = renderDecisions();
+    if (view.tab === "vault") main.innerHTML = renderVault();
+    if (view.tab === "set") main.innerHTML = renderSettings();
+  }
+}
+let lastLen = -1;
+function scrollBottom(){
+  const m = meeting(view.meetingId); const len = m.messages.length + (running ? 1 : 0);
+  if (len !== lastLen){ lastLen = len; requestAnimationFrame(() => window.scrollTo(0, document.body.scrollHeight)); }
+}
+function renderHeader(){
+  const m = view.tab === "meet" && view.meetingId ? meeting(view.meetingId) : null;
+  const titles = {meet:"BON31 会議室", dec:"決定事項", vault:"保管庫", set:"設定"};
+  $("hd").innerHTML =
+    (m ? `<button class="back" data-act="back">‹</button>` : `<div class="logo">B31</div>`) +
+    `<h1>${esc(m ? m.title : titles[view.tab])}</h1>` +
+    `<button class="who" data-act="switchMe">${esc(P[S.me].name)}として ▾</button>`;
+}
+function renderNav(){
+  const items = [["meet","💬","会議"],["dec","✅","決定事項"],["vault","🗂","保管庫"],["set","⚙️","設定"]];
+  $("nav").innerHTML = items.map(([k,ic,l]) => `<button class="${view.tab===k?"on":""}" data-act="tab" data-tab="${k}"><span class="ic">${ic}</span>${l}</button>`).join("");
+}
+function renderMeetings(){
+  const list = [...S.meetings].sort((a,b) => (b.messages.at(-1)?.ts||b.createdAt) - (a.messages.at(-1)?.ts||a.createdAt));
+  return `
+  <div class="card">
+    <h2>新しい議題を立てる</h2>
+    <input type="text" id="newTitle" placeholder="例：モニター営業、最初の10件どう取る？">
+    <div style="margin-top:8px;text-align:right"><button class="btn" data-act="newMeeting">会議を始める</button></div>
+  </div>
+  <h2>会議の一覧</h2>
+  ${list.map(m => {
+    const last = m.messages.at(-1);
+    const dec = S.decisions.filter(d => d.meetingId === m.id).length;
+    return `<button class="mtg" data-act="openMeeting" data-id="${m.id}">
+      <b>${esc(m.title)}</b>
+      <span class="muted">${last ? esc(P[last.who]?.name || "")+"："+esc(short(last.text, 30)) : "まだ発言はありません"}</span><br>
+      <span class="chip">${m.messages.length}件の発言</span> ${dec ? `<span class="chip gold">決定 ${dec}件</span>` : ""}
+    </button>`;
+  }).join("") || `<p class="muted">まだ会議はありません。</p>`}`;
+}
+function renderMsg(m, x){
+  if (x.who === "system") return `<p class="muted" style="text-align:center">${esc(x.text)}</p>`;
+  const p = P[x.who];
+  let body = `<div class="txt">${esc(x.text)}</div>`;
+  if (x.kind === "summary"){
+    body += x.proposals.map(pr => {
+      const done = pr.status !== "未決";
+      const stColor = pr.status === "却下" ? "#999" : "var(--green)";
+      return `<div class="prop">
+        <div>${esc(pr.text)}</div>
+        ${done ? `<div class="st" style="color:${stColor}">→ ${esc(pr.status)}</div>` :
+        `<div class="row" style="margin-top:8px;justify-content:flex-end">
+          <button class="btn sm ghost" data-act="rejectProp" data-m="${m.id}" data-msg="${x.id}" data-p="${pr.id}">却下</button>
+          <button class="btn sm ghost" data-act="editProp" data-m="${m.id}" data-msg="${x.id}" data-p="${pr.id}">修正して採用</button>
+          <button class="btn sm" data-act="adoptProp" data-m="${m.id}" data-msg="${x.id}" data-p="${pr.id}">採用</button>
+        </div>`}
+      </div>`;
+    }).join("");
+  }
+  return `<div class="msg ${p.ai?"ai":""}">
+    <div class="av" style="background:${p.color}">${p.label}</div>
+    <div class="bubble ${x.kind==="summary"?"summary":""}">
+      <div class="name" style="color:${p.color}">${esc(p.name)}<small>${fmt(x.ts)}</small></div>
+      ${body}
+      <div class="acts"><button data-act="keep" data-m="${m.id}" data-msg="${x.id}">🗂 保管</button></div>
+    </div>
+  </div>`;
+}
+function renderThread(){
+  const m = meeting(view.meetingId);
+  const typing = running && running.meetingId === m.id && running.typing
+    ? `<div class="typing">${esc(P[running.typing].name)}が考え中…</div>` : "";
+  return m.messages.map(x => renderMsg(m, x)).join("") + typing;
+}
+function renderComposer(){
+  const busy = !!running;
+  return `<div class="composer">
+    <div class="row">
+      <textarea id="inp" class="grow" rows="1" placeholder="${busy ? "議論中でも割り込めます" : "課題や意見を書く"}"></textarea>
+      <button class="btn" data-act="send">送信</button>
+    </div>
+    <div class="row" style="margin-top:6px">
+      ${busy
+        ? `<button class="btn red sm grow" data-act="stop">■ 議論を止める</button>`
+        : `<button class="btn gold sm grow" data-act="debate">🤖 AI同士で議論させる（${S.settings.rounds}往復）</button>`}
+    </div>
+  </div>`;
+}
+function renderDecisions(){
+  if (!S.decisions.length) return `<p class="muted">まだ決定事項はありません。会議のまとめで「採用」を押すとここに入ります。</p>`;
+  return `<p class="muted">採用した決定事項の一覧です。変更すると履歴が残ります。</p>` +
+  S.decisions.map(d => {
+    const open = view.openHist[d.id];
+    return `<div class="card" style="${d.status==="取消"?"opacity:.55":""}">
+      <div class="row"><span class="chip ${d.status==="有効"?"":"gray"}">${d.status}</span><span class="muted grow">${esc(d.meetingTitle||"")}</span></div>
+      <div style="margin:6px 0;font-weight:600;${d.status==="取消"?"text-decoration:line-through":""}">${esc(d.text)}</div>
+      <div class="row" style="justify-content:flex-end;flex-wrap:wrap">
+        <button class="btn sm ghost" data-act="hist" data-id="${d.id}">履歴（${d.history.length}）${open?"▲":"▼"}</button>
+        <button class="btn sm ghost" data-act="toggleDec" data-id="${d.id}">${d.status==="有効"?"取り消す":"元に戻す"}</button>
+        <button class="btn sm" data-act="editDec" data-id="${d.id}">変更</button>
+      </div>
+      ${open ? `<div class="hist">${[...d.history].reverse().map(h => `<div><b>${fmt(h.ts)} ${esc(P[h.by]?.name||"")}：${esc(h.action)}</b>${h.action==="変更" ? `<br><span class="muted">${esc(h.from)}</span><br>→ ${esc(h.to)}` : ""}</div>`).join("")}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+function renderVault(){
+  const tags = ["すべて","コード","資料","TODO","メモ"];
+  const list = S.vault.filter(v => view.vaultTag === "すべて" || v.tag === view.vaultTag);
+  return `<div class="tabs">${tags.map(t => `<button class="${view.vaultTag===t?"on":""}" data-act="vtag" data-t="${t}">${t}</button>`).join("")}</div>
+  ${list.length ? list.map(v => `<div class="card">
+    <div class="row"><span class="chip gold">${esc(v.tag)}</span><span class="muted grow">${esc(v.meetingTitle||"")}・${esc(P[v.by]?.name||"")}・${fmt(v.ts)}</span>
+    <button class="btn sm ghost" data-act="delVault" data-id="${v.id}">削除</button></div>
+    ${v.tag==="コード" ? `<pre class="code">${esc(v.text)}</pre>` : `<div class="txt" style="white-space:pre-wrap;margin-top:6px">${esc(v.text)}</div>`}
+  </div>`).join("") : `<p class="muted">まだありません。会議の発言の「🗂 保管」から追加できます。</p>`}`;
+}
+function renderSettings(){
+  const s = S.settings;
+  return `<div class="card">
+    <h2>AI同士の議論</h2>
+    <label class="f">往復回数（1〜5）</label>
+    <select id="setRounds">${[1,2,3,4,5].map(n => `<option ${s.rounds===n?"selected":""}>${n}</option>`).join("")}</select>
+    <label class="f" style="color:var(--oai)">大原AIの役割</label>
+    <textarea id="setRoleOai" rows="2">${esc(s.roleOai)}</textarea>
+    <label class="f" style="color:var(--claude)">Claudeの役割</label>
+    <textarea id="setRoleClaude" rows="2">${esc(s.roleClaude)}</textarea>
+  </div>
+  <div class="card">
+    <h2>これまでの履歴（引き継ぎ書）</h2>
+    <p class="muted">最初に1回だけ登録します。本番版では、AIが毎回これと決定事項を読んでから会議に参加します。</p>
+    <label class="f" style="color:var(--oai)">大原AIの引き継ぎ書</label>
+    <textarea id="setHoOai" rows="4" placeholder="ChatGPTに作ってもらったまとめを貼る">${esc(s.handoffOai)}</textarea>
+    <label class="f" style="color:var(--claude)">Claudeの引き継ぎ書</label>
+    <textarea id="setHoClaude" rows="4" placeholder="Claudeが作ったまとめを貼る">${esc(s.handoffClaude)}</textarea>
+    <div style="text-align:right;margin-top:10px"><button class="btn" data-act="saveSettings">保存</button></div>
+  </div>
+  <div class="card">
+    <h2>AIの接続</h2>
+    <p class="muted">プレビュー版ではAIは見本の返事をします。本番版では、APIキーを外から見えない場所（Firebase Functions）に入れて、本物の大原AI（ChatGPT）とClaudeにつなぎます。</p>
+    <div class="row" style="margin-top:6px"><span class="chip gray">大原AI：未接続</span><span class="chip gray">Claude：未接続</span></div>
+  </div>
+  <div class="card">
+    <h2>データ</h2>
+    <p class="muted">プレビューのデータを消して、最初の状態に戻します。</p>
+    <button class="btn red sm" data-act="reset">リセット</button>
+  </div>`;
+}
+
+/* ---------- 操作 ---------- */
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const a = el.dataset.act;
+  if (a === "closeSheet"){ if (e.target === el) closeSheet(); return; }
+  if (a === "tab"){ view.tab = el.dataset.tab; if (view.tab !== "meet") view.meetingId = null; window.scrollTo(0,0); render(); }
+  else if (a === "back"){ view.meetingId = null; render(); }
+  else if (a === "switchMe"){
+    openSheet(`<h2>誰として書き込む？</h2>` + ["yama","ohara"].map(k => `<button class="opt" data-act="setMe" data-k="${k}">${P[k].name}${S.me===k?"（いま）":""}</button>`).join("") +
+      `<p class="muted" style="margin-top:10px">本番版では、それぞれのログインで自動的に切り替わります。</p>`);
+  }
+  else if (a === "setMe"){ S.me = el.dataset.k; save(); closeSheet(); render(); }
+  else if (a === "newMeeting"){
+    const t = $("newTitle").value.trim(); if (!t) return;
+    const m = {id:uid(), title:t, createdAt:now(), messages:[{id:uid(), who:S.me, ts:now(), text:t}]};
+    S.meetings.push(m); save(); view.meetingId = m.id; lastLen = -1; render();
+  }
+  else if (a === "openMeeting"){ view.meetingId = el.dataset.id; lastLen = -1; render(); }
+  else if (a === "send"){
+    const t = $("inp").value.trim(); if (!t) return;
+    meeting(view.meetingId).messages.push({id:uid(), who:S.me, ts:now(), text:t}); $("inp").value = ""; save(); render();
+  }
+  else if (a === "debate"){ runDebate(view.meetingId); }
+  else if (a === "stop"){ if (running) running.stop = true; }
+  else if (a === "adoptProp"){ adopt(el.dataset.m, el.dataset.msg, el.dataset.p); }
+  else if (a === "rejectProp"){ reject(el.dataset.m, el.dataset.msg, el.dataset.p); }
+  else if (a === "editProp"){
+    const m = meeting(el.dataset.m), msg = m.messages.find(x => x.id === el.dataset.msg), p = msg.proposals.find(x => x.id === el.dataset.p);
+    openSheet(`<h2>修正して採用</h2><textarea id="sheetTxt" rows="4">${esc(p.text)}</textarea>
+      <div style="text-align:right;margin-top:10px"><button class="btn" data-act="doEditProp" data-m="${m.id}" data-msg="${msg.id}" data-p="${p.id}">この内容で採用</button></div>`);
+  }
+  else if (a === "doEditProp"){ const t = $("sheetTxt").value; closeSheet(); adopt(el.dataset.m, el.dataset.msg, el.dataset.p, t); }
+  else if (a === "hist"){ view.openHist[el.dataset.id] = !view.openHist[el.dataset.id]; render(); }
+  else if (a === "toggleDec"){ toggleDecision(el.dataset.id); }
+  else if (a === "editDec"){
+    const d = S.decisions.find(x => x.id === el.dataset.id);
+    openSheet(`<h2>決定事項を変更</h2><p class="muted">変更前の内容は履歴に残ります。</p><textarea id="sheetTxt" rows="4">${esc(d.text)}</textarea>
+      <div style="text-align:right;margin-top:10px"><button class="btn" data-act="doEditDec" data-id="${d.id}">変更する</button></div>`);
+  }
+  else if (a === "doEditDec"){ const t = $("sheetTxt").value; closeSheet(); editDecision(el.dataset.id, t); }
+  else if (a === "keep"){
+    openSheet(`<h2>どこに保管する？</h2>` + ["コード","資料","TODO","メモ"].map(t => `<button class="opt" data-act="doKeep" data-t="${t}" data-m="${el.dataset.m}" data-msg="${el.dataset.msg}">${t}</button>`).join(""));
+  }
+  else if (a === "doKeep"){
+    const m = meeting(el.dataset.m), msg = m.messages.find(x => x.id === el.dataset.msg);
+    S.vault.unshift({id:uid(), tag:el.dataset.t, ts:now(), by:msg.who, meetingTitle:m.title, text:msg.text});
+    save(); closeSheet(); render();
+  }
+  else if (a === "vtag"){ view.vaultTag = el.dataset.t; render(); }
+  else if (a === "delVault"){ S.vault = S.vault.filter(v => v.id !== el.dataset.id); save(); render(); }
+  else if (a === "saveSettings"){
+    S.settings.rounds = parseInt($("setRounds").value, 10) || 3;
+    S.settings.roleOai = $("setRoleOai").value; S.settings.roleClaude = $("setRoleClaude").value;
+    S.settings.handoffOai = $("setHoOai").value; S.settings.handoffClaude = $("setHoClaude").value;
+    save(); el.textContent = "保存しました"; setTimeout(() => { el.textContent = "保存"; }, 1500);
+  }
+  else if (a === "reset"){
+    openSheet(`<h2>リセットしますか？</h2><p class="muted">この端末のプレビューデータがすべて消えます。</p>
+      <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn ghost" data-act="closeSheetBtn">やめる</button><button class="btn red" data-act="doReset">リセット</button></div>`);
+  }
+  else if (a === "closeSheetBtn"){ closeSheet(); }
+  else if (a === "doReset"){ S = seed(); save(); closeSheet(); view = {tab:"meet", meetingId:null, vaultTag:"すべて", openHist:{}}; render(); }
+});
+
+render();
+})();
+</script>
+</body>
+</html>
